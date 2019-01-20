@@ -3,11 +3,13 @@ package com.tensquare.base.web.controller;
 import com.tensquare.base.po.Label;
 import com.tensquare.base.service.LabelService;
 import constants.StatusCode;
+import dto.PageResultDTO;
 import dto.ResultDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin // 解决跨域
@@ -48,4 +50,16 @@ public class LabelController {
         return new ResultDTO(true, StatusCode.OK, "删除成功");
     }
 
+    @PostMapping("/search/{page}/{size}")
+    public ResultDTO searchByPage(@RequestBody Map<String, Object> searchMap, @PathVariable Integer page, @PathVariable Integer size) {
+        Page<Label> pageResponse = labelService.searchByPage(searchMap, page, size);
+        PageResultDTO<Label> pages = new PageResultDTO<>(pageResponse.getTotalElements(), pageResponse.getContent());
+        return new ResultDTO(true, StatusCode.OK, "查询成功", pages);
+    }
+
+    @PostMapping("/search")
+    public ResultDTO search(@RequestBody Map<String, Object> searchMap) {
+        List<Label> list = labelService.search(searchMap);
+        return new ResultDTO(true, StatusCode.OK, "查询成功", list);
+    }
 }
