@@ -1,4 +1,4 @@
-package com.tensquare.recruit.web.common;
+package com.tensquare.qa.web.common;
 
 import constants.StatusCode;
 import dto.ResultDTO;
