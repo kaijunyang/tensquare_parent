@@ -1,0 +1,16 @@
+server:
+  #服务端口
+  port: 9006
+spring:
+  application:
+    #指定服务名
+    name: tensquare-spit
+  #数据源配置
+  data:
+    mongodb:
+      # 主机地址
+      host: 127.0.0.1
+      # 数据库
+      database: spitdb
+      # 默认端口是27017
+      port: 27017
