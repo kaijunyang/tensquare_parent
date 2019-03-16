@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.util.StringUtils;
@@ -46,12 +47,17 @@ public class UserService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
 	/**
 	 * 增加
 	 * @param user
 	 */
 	public void saveUser(User user) {
 		user.setId( idWorker.nextId()+"" );
+		// 加密
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		userRepository.save(user);
 	}
 
@@ -60,6 +66,9 @@ public class UserService {
 	 * @param user
 	 */
 	public void updateUser(User user) {
+		if (user != null && !StringUtils.isEmpty(user.getPassword())) {
+			user.setPassword(passwordEncoder.encode(user.getPassword()));
+		}
 		userRepository.save(user);
 	}
 
@@ -211,9 +220,23 @@ public class UserService {
         user.setOnline(0L);//在线时长
         user.setRegdate(new Date());//注册日期
         user.setUpdatedate(new Date());//更新日期
-
+		// 加密
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
         redisTemplate.delete("sms.checkcode." + user.getMobile());
     }
+
+	public User login(String loginName, String password) {
+		User user =  userRepository.findUserByLoginname(loginName);
+		if (user == null) {
+			return null;
+		}
+
+		if (passwordEncoder.matches(password, user.getPassword())) {
+			return user;
+		} else {
+			return null;
+		}
+	}
 }

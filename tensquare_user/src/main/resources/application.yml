@@ -15,3 +15,10 @@ spring:
     host: 127.0.0.1
   rabbitmq:
     host: 127.0.0.1
+#自定义属性jwt相关
+jwt:
+  config:
+    key: itcast
+    #一个小时过期
+    ttl: 3600000
+

@@ -17,8 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.util.StringUtils;
 import utils.IdWorker;
 
 import com.tensquare.user.dao.AdminRepository;
@@ -39,12 +41,16 @@ public class AdminService {
 	@Autowired
 	private IdWorker idWorker;
 
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
 	/**
 	 * 增加
 	 * @param admin
 	 */
 	public void saveAdmin(Admin admin) {
 		admin.setId( idWorker.nextId()+"" );
+		admin.setPassword(passwordEncoder.encode(admin.getPassword()));
 		adminRepository.save(admin);
 	}
 
@@ -53,6 +59,9 @@ public class AdminService {
 	 * @param admin
 	 */
 	public void updateAdmin(Admin admin) {
+		if (admin != null && !StringUtils.isEmpty(admin.getPassword())) {
+			admin.setPassword(passwordEncoder.encode(admin.getPassword()));
+		}
 		adminRepository.save(admin);
 	}
 
@@ -140,6 +149,20 @@ public class AdminService {
 				return cb.and( predicateList.toArray(new Predicate[predicateList.size()]));
 		};
 
+	}
+
+	public Admin findAdminByLoginName(String loginNane, String password) {
+		Admin admin = adminRepository.findAdminByLoginname(loginNane);
+		// 验证密码
+		if (admin == null) {
+			return null;
+		}
+
+		if (passwordEncoder.matches(password, admin.getPassword())) {
+			return admin;
+		} else {
+			return null;
+		}
 	}
 
 }

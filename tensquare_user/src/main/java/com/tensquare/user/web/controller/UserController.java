@@ -2,8 +2,10 @@ package com.tensquare.user.web.controller;
 import java.util.List;
 import java.util.Map;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import com.tensquare.user.po.User;
@@ -12,6 +14,10 @@ import com.tensquare.user.service.UserService;
 import dto.PageResultDTO;
 import dto.ResultDTO;
 import constants.StatusCode;
+import utils.JwtUtils;
+
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 控制器层
  * @author BoBoLaoShi
@@ -24,6 +30,9 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private JwtUtils jwtUtils;
 	
 	
 	/**
@@ -52,7 +61,32 @@ public class UserController {
 	 * @param id
 	 */
 	@DeleteMapping("/{id}")
-	public ResultDTO remove(@PathVariable String id ){
+	public ResultDTO remove(HttpServletRequest request, @PathVariable String id ){
+		// 鉴权
+		String authorizationHeader = request.getHeader("JwtAuthorization");
+		if (StringUtils.isEmpty(authorizationHeader)) {
+			return new ResultDTO(true, StatusCode.OK, "权限不足1");
+		}
+		if (!authorizationHeader.startsWith("Bearer ")) {
+			return new ResultDTO(true, StatusCode.OK, "权限不足2");
+		}
+		// 获取载荷
+		Claims claims = null;
+		try {
+			String token = authorizationHeader.substring(7);
+			claims = jwtUtils.parseJWT(token);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResultDTO(false,StatusCode.ACCESSERROR,"权限不足3");
+		}
+		if (claims == null) {
+			return new ResultDTO(false,StatusCode.ACCESSERROR,"权限不足4");
+		}
+		if (!"admin".equals(claims.get("admin"))) {
+			return new ResultDTO(false,StatusCode.ACCESSERROR,"权限不足5");
+		}
+
+		// 删除成功
 		userService.deleteUserById(id);
 		return new ResultDTO(true,StatusCode.OK,"删除成功");
 	}
@@ -117,6 +151,18 @@ public class UserController {
 	public ResultDTO register(User user, @PathVariable String checkcode) {
 		userService.register(user, checkcode);
 		return new ResultDTO(true, StatusCode.OK, "请求成功");
+	}
+
+	/**
+	 * 登录
+	 */
+	public ResultDTO login(String loginName, String password) {
+		User user = userService.login(loginName, password);
+		if (user == null) {
+			return new ResultDTO(true, StatusCode.OK, "账号或者密码不正确");
+		} else {
+			return new ResultDTO(true, StatusCode.OK, "登录成功");
+		}
 	}
 	
 }

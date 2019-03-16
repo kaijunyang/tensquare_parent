@@ -10,5 +10,5 @@ import com.tensquare.user.po.User;
  *
  */
 public interface UserRepository extends JpaRepository<User,String>,JpaSpecificationExecutor<User>{
-	
+    User findUserByLoginname(String loginName);
 }

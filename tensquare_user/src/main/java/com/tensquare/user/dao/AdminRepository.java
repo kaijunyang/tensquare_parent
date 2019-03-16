@@ -10,5 +10,5 @@ import com.tensquare.user.po.Admin;
  *
  */
 public interface AdminRepository extends JpaRepository<Admin,String>,JpaSpecificationExecutor<Admin>{
-	
+    Admin findAdminByLoginname(String loginName);
 }
